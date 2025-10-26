@@ -1,36 +1,28 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace EspacioDatos
 {
     public class Cadeteria
     {
+  
         private string? nombre;
-
         private string telefono;
-        //    private List<Cadete> listadoCadetes;
-     private List<Cadete> listadoCadetes = new List<Cadete>();
-     
-        // en TP2 ahora es listado pedios, ya no se llama pedidos disponibles
+        private List<Cadete> listadoCadetes = new List<Cadete>();
         private List<Pedido> listadoPedidos = new List<Pedido>();
-        
 
         public string? Nombre { get => nombre; set => nombre = value; }
         public string Telefono { get => telefono; set => telefono = value; }
-        // public List<Cadete> ListadoCadetes { get => listadoCadetes; set => listadoCadetes = value; }
-         public List<Cadete> ListadoCadetes { get => listadoCadetes; set => listadoCadetes = value; }
-         //en tp2 ahora se llama listado pedidos
+        public List<Cadete> ListadoCadetes { get => listadoCadetes; set => listadoCadetes = value; }
         public List<Pedido> ListadoPedidos { get => listadoPedidos; set => listadoPedidos = value; }
-
-        // public List<Pedido> PedidosDisponibles { get => pedidosDisponibles; set => pedidosDisponibles = value; }
-
 
         public Cadeteria(string nombre, string telefono)
         {
             this.Nombre = nombre;
             this.Telefono = telefono;
-    }
+        }
 
-    
-        //   agrego un pedido al listado tp2
         public string AgregarPedido(Pedido pedido)
         {
             if (pedido == null)
@@ -39,7 +31,6 @@ namespace EspacioDatos
             listadoPedidos.Add(pedido);
             return $"Pedido {pedido.Nro} agregado correctamente.";
         }
-
 
         public string AgregarCadete(Cadete nuevoCadete)
         {
@@ -50,19 +41,12 @@ namespace EspacioDatos
             return $"Cadete {nuevoCadete.Nombre} agregado correctamente.";
         }
 
-
-
-
-           public Pedido? BuscarPedidoPorId(int pedidoId)
+        public Pedido? BuscarPedidoPorId(int pedidoId)
         {
             return listadoPedidos.FirstOrDefault(p => p.Nro == pedidoId);
         }
 
-
-
-
-        // Método para asignar un pedido a un cadete tp2
- public string AsignarPedidoACadete(int cadeteId, int pedidoId)
+        public string AsignarPedidoACadete(int cadeteId, int pedidoId)
         {
             Pedido? pedido = listadoPedidos.FirstOrDefault(p => p.Nro == pedidoId);
             if (pedido == null)
@@ -76,7 +60,7 @@ namespace EspacioDatos
             return $"El pedido {pedidoId} ha sido asignado al cadete {cadeteId}.";
         }
 
-       public string ReasignarPedido(int pedidoId, int nuevoCadeteId)
+        public string ReasignarPedido(int pedidoId, int nuevoCadeteId)
         {
             Pedido? pedido = BuscarPedidoPorId(pedidoId);
             if (pedido == null)
@@ -93,26 +77,62 @@ namespace EspacioDatos
             return $"El pedido {pedidoId} ha sido reasignado al cadete {nuevoCadeteId}.";
         }
 
+        // nuevo
+        private int ultimoNroPedido = 0;
 
-/// ////////////////////////// ////////////////////////// ////////////////////////// ////////////////////////// ////////////////////////// ////////////////////////// ///////////////////////
-
-
-     public const double PrecioPorViaje = 50;
-
-        // Contar pedidos entregados de un cadete
-        public int PedidosRealizados(Cadete cadete)
+        public int TomarPedido(string nombreCliente, string direccion, string telefono, string referenciaDireccion, string observacion)
         {
-            return listadoPedidos.Count(p => p.CadeteAsignado == cadete && p.Estado == EstadoPedido.Entregado);
+            // 1 crear cliente
+            Clientes cliente = new Clientes(nombreCliente, direccion, telefono, referenciaDireccion);
+
+            // 2. calcular nro de pedido
+            int nroPedido = listadoPedidos.Count + 1;
+
+            // 3 crear pedido usando el constructor correcto
+            Pedido pedido = new Pedido(
+                nroPedido,
+                direccion,    // o direccion del cliente
+                cliente,
+                EstadoPedido.Pendiente
+            );
+
+            // 4 asignar obs si la propiedad existe
+            pedido.Observacion = observacion;
+
+            // 5 aregar a la lista de pedidos
+            listadoPedidos.Add(pedido);
+
+            // devolver nro de pedido para la respuesta
+            return nroPedido;
         }
 
-        // Calcular jornal a cobrar
+        // ===================================================
+
+        // metodo de informe y jornal (de antes)
+        public const double PrecioPorViaje = 50;
+
+
         public double JornalACobrar(Cadete cadete)
         {
             int realizados = PedidosRealizados(cadete);
             return realizados * PrecioPorViaje;
         }
+                    public int PedidosRealizados(Cadete cadete)
+            {
+                int contador = 0;
+                foreach (var pedido in listadoPedidos)
+                {
+                    if (pedido.CadeteAsignado != null &&
+                        pedido.CadeteAsignado.Id == cadete.Id &&
+                        pedido.Estado == EstadoPedido.Entregado)
+                    {
+                        contador++;
+                    }
+                }
+                return contador;
+            }
 
-        // Obtener informe de todos los cadetes
+
         public List<string> ObtenerInforme()
         {
             var informe = new List<string>();
@@ -137,10 +157,5 @@ namespace EspacioDatos
 
             return informe;
         }
-
-
-        
-
-            
     }
 }

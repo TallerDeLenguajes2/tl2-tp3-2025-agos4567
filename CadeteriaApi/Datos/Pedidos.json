@@ -1,0 +1,70 @@
+[
+  {
+    "CadeteAsignado": {
+      "Id": 3,
+      "Nombre": "Lucas Gonzalez",
+      "Direccion": "Lavalle 190",
+      "Telefono": "83472321"
+    },
+    "Nro": 1,
+    "Observacion": "no",
+    "Cliente": {
+      "Nombre": "juana",
+      "Direccion": "san martin 2312",
+      "Telefono": "3821321",
+      "DatosReferenciaDireccion": "depto"
+    },
+    "Estado": 2
+  },
+  {
+    "CadeteAsignado": {
+      "Id": 3,
+      "Nombre": "Lucas Gonzalez",
+      "Direccion": "Lavalle 190",
+      "Telefono": "83472321"
+    },
+    "Nro": 2,
+    "Observacion": "esquina",
+    "Cliente": {
+      "Nombre": "agos",
+      "Direccion": "marcos paz 231",
+      "Telefono": "21321",
+      "DatosReferenciaDireccion": "planta baja"
+    },
+    "Estado": 2
+  },
+  {
+    "CadeteAsignado": {
+      "Id": 3,
+      "Nombre": "Lucas Gonzalez",
+      "Direccion": "Lavalle 190",
+      "Telefono": "83472321"
+    },
+    "Nro": 3,
+    "Observacion": "no",
+    "Cliente": {
+      "Nombre": "robert",
+      "Direccion": "av sarmiento",
+      "Telefono": "32812321",
+      "DatosReferenciaDireccion": "edificio blanco"
+    },
+    "Estado": 2
+  },
+  {
+    "CadeteAsignado": {
+      "Id": 2,
+      "Nombre": "Ana Gomez",
+      "Direccion": "Avenida Roca 456",
+      "Telefono": "987654321"
+    },
+    "Nro": 4,
+    "Observacion": "tocar timbre",
+    "Cliente": {
+      "Nombre": "julia",
+      "Direccion": "",
+      "Telefono": "328121",
+      "DatosReferenciaDireccion": "porton blanco"
+    },
+    "Estado": 2
+  }
+]

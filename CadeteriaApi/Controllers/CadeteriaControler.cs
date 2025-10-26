@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using EspacioDatos;
 using System.Collections.Generic;
+using System.IO;
 
 namespace TP4.Controllers
 {
@@ -8,69 +9,82 @@ namespace TP4.Controllers
     [Route("api/[controller]")]
     public class CadeteriaController : ControllerBase
     {
-        // Simulación de la base de datos
-        private static Cadeteria cadeteria = new Cadeteria("Cadetería Central", "381-5555555");
+        private readonly string rutaCadeteria = Path.Combine(Directory.GetCurrentDirectory(), "Datos", "Cadeteria.json");
+        private readonly string rutaCadetes = Path.Combine(Directory.GetCurrentDirectory(), "Datos", "Cadetes.json");
+        private readonly string rutaPedidos = Path.Combine(Directory.GetCurrentDirectory(), "Datos", "Pedidos.json");
 
-        // Constructor estático para precargar datos de ejemplo
-        static CadeteriaController()
+        private readonly AccesoADatosJSON acceso = new AccesoADatosJSON();
+        private Cadeteria cadeteria;
+
+        public CadeteriaController()
         {
-            cadeteria.AgregarCadete(new Cadete(1, "Carlos Pérez", "Calle Falsa 123", "381123456"));
-            cadeteria.AgregarCadete(new Cadete(2, "María López", "San Martín 789", "381654321"));
+            // Cargar datos de la cadetería
+            cadeteria = acceso.CargarCadeteria(rutaCadeteria);
 
-            var cliente1 = new Clientes("Juan Gómez", "Rivadavia 100", 381555000, "Depto A");
-            cadeteria.AgregarPedido(new Pedido(1, "Pizza grande", cliente1, EstadoPedido.Pendiente));
+            // Cargar y asignar lista de cadetes
+            var cadetes = acceso.CargarCadetes(rutaCadetes);
+            cadeteria.ListadoCadetes = cadetes;
+
+            // Cargar pedidos si existen
+            var pedidos = acceso.CargarPedidos(rutaPedidos);
+            cadeteria.ListadoPedidos = pedidos;
         }
 
-        //  [GET] /api/cadeteria/pedidos
-        [HttpGet("pedidos")]
-        public ActionResult<List<Pedido>> GetPedidos()
-        {
-            return Ok(cadeteria.ListadoPedidos);
-        }
-
-        //  [GET] /api/cadeteria/cadetes
         [HttpGet("cadetes")]
-        public ActionResult<List<Cadete>> GetCadetes()
+        public ActionResult<List<Cadete>> ListadoCadetes()
         {
             return Ok(cadeteria.ListadoCadetes);
         }
 
-        // [GET] /api/cadeteria/informe
+        [HttpGet("pedidos")]
+        public ActionResult<List<Pedido>> ListadoPedidos()
+        {
+            return Ok(cadeteria.ListadoPedidos);
+        }
+
         [HttpGet("informe")]
         public ActionResult<List<string>> GetInforme()
         {
-            var informe = cadeteria.ObtenerInforme();
-            return Ok(informe);
+            return Ok(cadeteria.ObtenerInforme());
         }
 
-        //  [POST] /api/cadeteria/agregarPedido
         [HttpPost("agregarPedido")]
-        public ActionResult AgregarPedido([FromBody] Pedido pedido)
+        public IActionResult AgregarPedido([FromBody] PedidoRequest request)
         {
-            if (pedido == null)
-                return BadRequest("El pedido no puede ser nulo.");
+            if (request == null)
+                return BadRequest("La solicitud no puede estar vacía.");
 
-            var resultado = cadeteria.AgregarPedido(pedido);
-            return Ok(resultado);
+            int nro = cadeteria.TomarPedido(
+                request.Nombre,
+                request.Direccion,
+                request.Telefono,
+                request.ReferenciaDireccion,
+                request.Observacion
+            );
+
+            // Guardar SOLO en Pedidos.json
+            acceso.GuardarPedidos(rutaPedidos, cadeteria.ListadoPedidos);
+
+            return Ok($"Pedido Nº {nro} agregado exitosamente");
         }
 
-        //  [PUT] /api/cadeteria/asignarPedido?idPedido=1&idCadete=2
         [HttpPut("asignarPedido")]
         public ActionResult AsignarPedido(int idPedido, int idCadete)
         {
             var resultado = cadeteria.AsignarPedidoACadete(idCadete, idPedido);
+            // Guardar solo pedidos para no tocar Cadeteria.json
+            acceso.GuardarPedidos(rutaPedidos, cadeteria.ListadoPedidos);
             return Ok(resultado);
         }
 
-        //  [PUT] /api/cadeteria/cambiarCadetePedido?idPedido=1&idNuevoCadete=2
         [HttpPut("cambiarCadetePedido")]
         public ActionResult CambiarCadetePedido(int idPedido, int idNuevoCadete)
         {
             var resultado = cadeteria.ReasignarPedido(idPedido, idNuevoCadete);
+            acceso.GuardarPedidos(rutaPedidos, cadeteria.ListadoPedidos);
             return Ok(resultado);
         }
 
-        // [PUT] /api/cadeteria/cambiarEstadoPedido?idPedido=1&nuevoEstado=Entregado
         [HttpPut("cambiarEstadoPedido")]
         public ActionResult CambiarEstadoPedido(int idPedido, EstadoPedido nuevoEstado)
         {
@@ -79,6 +93,8 @@ namespace TP4.Controllers
                 return NotFound("Pedido no encontrado.");
 
             pedido.CambiarEstado(nuevoEstado);
+            acceso.GuardarPedidos(rutaPedidos, cadeteria.ListadoPedidos);
+
             return Ok($"Estado del pedido {idPedido} cambiado a {nuevoEstado}.");
         }
     }
