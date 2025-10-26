@@ -66,5 +66,22 @@
       "DatosReferenciaDireccion": "porton blanco"
     },
     "Estado": 2
+  },
+  {
+    "CadeteAsignado": {
+      "Id": 1,
+      "Nombre": "Juan Perez",
+      "Direccion": "Junin 600",
+      "Telefono": "123456789"
+    },
+    "Nro": 5,
+    "Observacion": "-",
+    "Cliente": {
+      "Nombre": "ro",
+      "Direccion": "monteagudo 231",
+      "Telefono": "3812312",
+      "DatosReferenciaDireccion": "entrada izquierda"
+    },
+    "Estado": 2
   }
 ]

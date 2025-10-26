@@ -1,53 +1,45 @@
 using Microsoft.AspNetCore.Mvc;
 using EspacioDatos;
 using System.Collections.Generic;
-using System.IO;
 
-namespace TP4.Controllers
+namespace TP5.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
     public class CadeteriaController : ControllerBase
     {
-        private readonly string rutaCadeteria = Path.Combine(Directory.GetCurrentDirectory(), "Datos", "Cadeteria.json");
-        private readonly string rutaCadetes = Path.Combine(Directory.GetCurrentDirectory(), "Datos", "Cadetes.json");
-        private readonly string rutaPedidos = Path.Combine(Directory.GetCurrentDirectory(), "Datos", "Pedidos.json");
-
-        private readonly AccesoADatosJSON acceso = new AccesoADatosJSON();
         private Cadeteria cadeteria;
+        private AccesoADatosCadeteria ADCadeteria;
+        private AccesoADatosCadetes ADCadetes;
+        private AccesoADatosPedidos ADPedidos;
 
         public CadeteriaController()
         {
-            // Cargar datos de la cadetería
-            cadeteria = acceso.CargarCadeteria(rutaCadeteria);
+            ADCadeteria = new AccesoADatosCadeteria();
+            ADCadetes = new AccesoADatosCadetes();
+            ADPedidos = new AccesoADatosPedidos();
 
-            // Cargar y asignar lista de cadetes
-            var cadetes = acceso.CargarCadetes(rutaCadetes);
-            cadeteria.ListadoCadetes = cadetes;
-
-            // Cargar pedidos si existen
-            var pedidos = acceso.CargarPedidos(rutaPedidos);
-            cadeteria.ListadoPedidos = pedidos;
+            // Cargar datos desde los JSON
+            cadeteria = ADCadeteria.Obtener();
+            cadeteria.ListadoCadetes = ADCadetes.Obtener();
+            cadeteria.ListadoPedidos = ADPedidos.Obtener();
         }
 
+        // GET cadetes
         [HttpGet("cadetes")]
-        public ActionResult<List<Cadete>> ListadoCadetes()
+        public ActionResult<List<Cadete>> GetCadetes()
         {
             return Ok(cadeteria.ListadoCadetes);
         }
 
+        // GET pedidos
         [HttpGet("pedidos")]
-        public ActionResult<List<Pedido>> ListadoPedidos()
+        public ActionResult<List<Pedido>> GetPedidos()
         {
             return Ok(cadeteria.ListadoPedidos);
         }
 
-        [HttpGet("informe")]
-        public ActionResult<List<string>> GetInforme()
-        {
-            return Ok(cadeteria.ObtenerInforme());
-        }
-
+        // POST nuevo pedido
         [HttpPost("agregarPedido")]
         public IActionResult AgregarPedido([FromBody] PedidoRequest request)
         {
@@ -62,29 +54,22 @@ namespace TP4.Controllers
                 request.Observacion
             );
 
-            // Guardar SOLO en Pedidos.json
-            acceso.GuardarPedidos(rutaPedidos, cadeteria.ListadoPedidos);
+            // 🔹 Guardar SOLO pedidos
+            ADPedidos.Guardar(cadeteria.ListadoPedidos);
 
             return Ok($"Pedido Nº {nro} agregado exitosamente");
         }
 
+        // PUT asignar pedido
         [HttpPut("asignarPedido")]
         public ActionResult AsignarPedido(int idPedido, int idCadete)
         {
             var resultado = cadeteria.AsignarPedidoACadete(idCadete, idPedido);
-            // Guardar solo pedidos para no tocar Cadeteria.json
-            acceso.GuardarPedidos(rutaPedidos, cadeteria.ListadoPedidos);
+            ADPedidos.Guardar(cadeteria.ListadoPedidos);
             return Ok(resultado);
         }
 
-        [HttpPut("cambiarCadetePedido")]
-        public ActionResult CambiarCadetePedido(int idPedido, int idNuevoCadete)
-        {
-            var resultado = cadeteria.ReasignarPedido(idPedido, idNuevoCadete);
-            acceso.GuardarPedidos(rutaPedidos, cadeteria.ListadoPedidos);
-            return Ok(resultado);
-        }
-
+        // PUT cambiar estado
         [HttpPut("cambiarEstadoPedido")]
         public ActionResult CambiarEstadoPedido(int idPedido, EstadoPedido nuevoEstado)
         {
@@ -93,9 +78,15 @@ namespace TP4.Controllers
                 return NotFound("Pedido no encontrado.");
 
             pedido.CambiarEstado(nuevoEstado);
-            acceso.GuardarPedidos(rutaPedidos, cadeteria.ListadoPedidos);
-
+            ADPedidos.Guardar(cadeteria.ListadoPedidos);
             return Ok($"Estado del pedido {idPedido} cambiado a {nuevoEstado}.");
+        }
+
+        // GET informe
+        [HttpGet("informe")]
+        public ActionResult<List<string>> GetInforme()
+        {
+            return Ok(cadeteria.ObtenerInforme());
         }
     }
 }
